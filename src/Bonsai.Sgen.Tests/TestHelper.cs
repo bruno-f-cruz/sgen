@@ -7,12 +7,14 @@ namespace Bonsai.Sgen.Tests
         public static CSharpCodeDomGenerator CreateGenerator(
             JsonSchema schema,
             SerializerLibraries serializerLibraries = SerializerLibraries.YamlDotNet | SerializerLibraries.NewtonsoftJson,
-            string schemaNamespace = nameof(TestHelper))
+            string schemaNamespace = nameof(TestHelper),
+            bool skipExternalTypeNames = false)
         {
             var settings = new CSharpCodeDomGeneratorSettings
             {
                 Namespace = schemaNamespace,
-                SerializerLibraries = serializerLibraries
+                SerializerLibraries = serializerLibraries,
+                SkipExternalTypeNames = skipExternalTypeNames
             };
             schema = schema.WithCompatibleDefinitions(settings.TypeNameGenerator)
                            .WithResolvedAnyOfNullableProperty()

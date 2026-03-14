@@ -122,5 +122,41 @@ schema => new TestJsonReferenceResolver(
             Assert.IsTrue(codeB.Contains("class DerivedType : TestHelper.Base.CommonType"), "Incorrect type declaration.");
             CompilerTestHelper.CompileFromSource(codeA, codeB);
         }
+
+        [TestMethod]
+        public async Task GenerateWithExternalTypeReferenceProperty_SkipTypenameGen_EmitExternalTypeDefinition()
+        {
+            var schemaA = await CreateCommonDefinitions();
+            var generatorA = TestHelper.CreateGenerator(schemaA, schemaNamespace: $"{nameof(TestHelper)}.Base");
+            var codeA = generatorA.GenerateFile();
+
+            var schemaB = await JsonSchema.FromJsonAsync(@"
+{
+    ""$schema"": ""http://json-schema.org/draft-04/schema#"",
+    ""definitions"": {
+      ""SpecificType"": {
+        ""type"": ""object"",
+        ""properties"": {
+          ""Bar"": {
+            ""$ref"": ""https://schemaA/definitions/CommonType""
+          },
+          ""Baz"": {
+            ""type"": ""integer""
+          }
+        }
+      }
+    }
+  }
+",
+            documentPath: "",
+            schema => new TestJsonReferenceResolver(
+                new JsonSchemaAppender(schema, new DefaultTypeNameGenerator()),
+                schemaA,
+                generatorA.Settings.Namespace));
+
+            var generatorB = TestHelper.CreateGenerator(schemaB, schemaNamespace: $"{nameof(TestHelper)}.Derived", skipExternalTypeNames: true);
+            var codeB = generatorB.GenerateFile();
+            Assert.IsTrue(codeB.Contains("public partial class CommonType"), "External type should be emitted when skip flag is set.");
+        }
     }
 }

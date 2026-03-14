@@ -39,7 +39,7 @@ namespace Bonsai.Sgen
 
         protected override CodeArtifact GenerateType(JsonSchema schema, string typeNameHint)
         {
-            if (schema.TryGetExternalTypeName(out var _))
+            if (!Settings.SkipExternalTypeNames && schema.TryGetExternalTypeName(out var _))
                 return new CodeArtifact(typeNameHint, default, default, default, string.Empty);
 
             var typeName = _resolver.GetOrGenerateTypeName(schema, typeNameHint);
