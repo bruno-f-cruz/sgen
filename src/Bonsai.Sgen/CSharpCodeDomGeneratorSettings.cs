@@ -23,11 +23,8 @@ namespace Bonsai.Sgen
 
         public SerializerLibraries SerializerLibraries { get; set; }
 
-        public bool SkipExternalTypeNames
-        {
-            // TODO What to do here if a different implementation of the interface is passed?
-            get => ((CSharpTypeNameGenerator)TypeNameGenerator).SkipExternalTypeNames;
-            set => ((CSharpTypeNameGenerator)TypeNameGenerator).SkipExternalTypeNames = value;
-        }
+        public bool GenerateExternalTypes =>
+            TypeNameGenerator is CSharpTypeNameGenerator nameGenerator &&
+            nameGenerator.GenerateExternalTypes;
     }
 }

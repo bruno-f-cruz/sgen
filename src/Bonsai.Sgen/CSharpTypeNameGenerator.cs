@@ -4,7 +4,7 @@ namespace Bonsai.Sgen
 {
     internal class CSharpTypeNameGenerator : DefaultTypeNameGenerator
     {
-        public bool SkipExternalTypeNames { get; set; }
+        public bool GenerateExternalTypes { get; set; }
 
         protected override string Generate(JsonSchema schema, string typeNameHint)
         {
@@ -14,7 +14,7 @@ namespace Bonsai.Sgen
 
         public override string Generate(JsonSchema schema, string typeNameHint, IEnumerable<string> reservedTypeNames)
         {
-            if (!SkipExternalTypeNames && schema.TryGetExternalTypeName(out string typeName))
+            if (!GenerateExternalTypes && schema.TryGetExternalTypeName(out string typeName))
                 return typeName;
 
             return base.Generate(schema, typeNameHint, reservedTypeNames);

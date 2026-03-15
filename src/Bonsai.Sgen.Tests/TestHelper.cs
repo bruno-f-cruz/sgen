@@ -8,15 +8,16 @@ namespace Bonsai.Sgen.Tests
             JsonSchema schema,
             SerializerLibraries serializerLibraries = SerializerLibraries.YamlDotNet | SerializerLibraries.NewtonsoftJson,
             string schemaNamespace = nameof(TestHelper),
-            bool skipExternalTypeNames = false)
+            bool generateExternalTypes = false)
         {
             var settings = new CSharpCodeDomGeneratorSettings
             {
                 Namespace = schemaNamespace,
-                SerializerLibraries = serializerLibraries,
-                SkipExternalTypeNames = skipExternalTypeNames
+                SerializerLibraries = serializerLibraries
             };
-            schema = schema.WithCompatibleDefinitions(settings.TypeNameGenerator)
+            var nameGenerator = (CSharpTypeNameGenerator)settings.TypeNameGenerator;
+            nameGenerator.GenerateExternalTypes = generateExternalTypes;
+            schema = schema.WithCompatibleDefinitions(nameGenerator)
                            .WithResolvedAnyOfNullableProperty()
                            .WithResolvedDiscriminatorInheritance();
 

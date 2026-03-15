@@ -124,7 +124,7 @@ schema => new TestJsonReferenceResolver(
         }
 
         [TestMethod]
-        public async Task GenerateWithExternalTypeReferenceProperty_SkipTypenameGen_EmitExternalTypeDefinition()
+        public async Task GenerateWithExternalTypeReferencePropertyAndGenerateExternalTypes_EmitExternalTypeDefinition()
         {
             var schemaA = await CreateCommonDefinitions();
             var generatorA = TestHelper.CreateGenerator(schemaA, schemaNamespace: $"{nameof(TestHelper)}.Base");
@@ -154,9 +154,9 @@ schema => new TestJsonReferenceResolver(
                 schemaA,
                 generatorA.Settings.Namespace));
 
-            var generatorB = TestHelper.CreateGenerator(schemaB, schemaNamespace: $"{nameof(TestHelper)}.Derived", skipExternalTypeNames: true);
+            var generatorB = TestHelper.CreateGenerator(schemaB, schemaNamespace: $"{nameof(TestHelper)}.Derived", generateExternalTypes: true);
             var codeB = generatorB.GenerateFile();
-            Assert.IsTrue(codeB.Contains("public partial class CommonType"), "External type should be emitted when skip flag is set.");
+            Assert.IsTrue(codeB.Contains("public partial class CommonType"), "Missing external type definition.");
         }
     }
 }

@@ -53,9 +53,9 @@ namespace Bonsai.Sgen
                 }
             }.AcceptOnlyFromAmong(typeof(SerializerOptions).GetEnumNames());
 
-            var skipTypenameGenOption = new Option<bool>("--skip-typename-gen")
+            var generateExternalTypesOption = new Option<bool>("--generate-external-types")
             {
-                Description = "When set, ignores the x-sgen-typename json-schema extension and generates all types regardless of external type name annotations."
+                Description = "Specifies whether to generate serialization classes for types annotated with x-sgen-typename."
             };
 
             var rootCommand = new RootCommand("Tool for automatically generating serialization classes from JSON Schema files.");
@@ -65,7 +65,7 @@ namespace Bonsai.Sgen
             rootCommand.Options.Add(outputPathOption);
             rootCommand.Options.Add(nameOption);
             rootCommand.Options.Add(serializerLibrariesOption);
-            rootCommand.Options.Add(skipTypenameGenOption);
+            rootCommand.Options.Add(generateExternalTypesOption);
             rootCommand.SetAction(async (parseResult, cancellationToken) =>
             {
                 JsonSchema schema;
@@ -85,7 +85,7 @@ namespace Bonsai.Sgen
                 var settings = new CSharpCodeDomGeneratorSettings();
                 var nameGenerator = (CSharpTypeNameGenerator)settings.TypeNameGenerator;
                 settings.SerializerLibraries = (SerializerLibraries)parseResult.GetValue(serializerLibrariesOption);
-                settings.SkipExternalTypeNames = parseResult.GetValue(skipTypenameGenOption);
+                nameGenerator.GenerateExternalTypes = parseResult.GetValue(generateExternalTypesOption);
 
                 schema = schema.WithCompatibleDefinitions(nameGenerator)
                                .WithResolvedAnyOfNullableProperty()
