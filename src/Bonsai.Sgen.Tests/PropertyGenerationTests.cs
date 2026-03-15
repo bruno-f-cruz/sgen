@@ -119,7 +119,7 @@ namespace Bonsai.Sgen.Tests
         }
 
         [TestMethod]
-        public async Task GenerateFromUniqueItemsArrayProperty_EnsureHashSetType()
+        public async Task GenerateFromUniqueItemsArrayProperty_EnsureSetType()
         {
             var schema = await JsonSchema.FromJsonAsync(@"
 {
@@ -143,7 +143,7 @@ namespace Bonsai.Sgen.Tests
         }
 
         [TestMethod]
-        public async Task GenerateFromArrayProperty_WithoutUniqueItems_EnsureListType()
+        public async Task GenerateFromArrayPropertyWithoutUniqueItems_EnsureArrayType()
         {
             var schema = await JsonSchema.FromJsonAsync(@"
 {
@@ -167,7 +167,7 @@ namespace Bonsai.Sgen.Tests
         }
 
         [TestMethod]
-        public async Task GenerateFromUniqueItemsArrayOfObjects_EnsureHashSetType()
+        public async Task GenerateFromUniqueItemsArrayOfObjects_EnsureSetType()
         {
             var schema = await JsonSchema.FromJsonAsync(@"
 {
