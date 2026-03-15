@@ -15,6 +15,14 @@ namespace Bonsai.Sgen
         public override string Resolve(JsonSchema schema, bool isNullable, string typeNameHint)
         {
             var typeName = base.Resolve(schema, isNullable, typeNameHint);
+            if (schema.ActualSchema.IsArray && schema.ActualSchema.UniqueItems)
+            {
+                var itemSchema = schema.ActualSchema.Item;
+                var itemType = itemSchema != null
+                    ? Resolve(itemSchema, itemSchema.IsNullable(Settings.SchemaType), string.Empty)
+                    : "object";
+                return $"System.Collections.Generic.HashSet<{itemType}>";
+            }
             if (schema.IsDictionary &&
                 schema.ExtensionData?.TryGetValue(JsonSchemaExtensions.PropertyNamesSchema, out var value) is true &&
                 value is JsonSchema propertyNamesSchema)
