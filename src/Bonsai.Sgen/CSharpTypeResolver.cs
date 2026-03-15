@@ -15,13 +15,13 @@ namespace Bonsai.Sgen
         public override string Resolve(JsonSchema schema, bool isNullable, string typeNameHint)
         {
             var typeName = base.Resolve(schema, isNullable, typeNameHint);
-            if (schema.ActualSchema.IsArray && schema.ActualSchema.UniqueItems)
+            if (schema.ActualSchema.IsArray && schema.ActualSchema.UniqueItems && Settings is CSharpCodeDomGeneratorSettings generatorSettings)
             {
                 var itemSchema = schema.ActualSchema.Item;
                 var itemType = itemSchema != null
                     ? Resolve(itemSchema, itemSchema.IsNullable(Settings.SchemaType), string.Empty)
                     : "object";
-                return $"System.Collections.Generic.HashSet<{itemType}>";
+                return $"{generatorSettings.SetType}<{itemType}>";
             }
             if (schema.IsDictionary &&
                 schema.ExtensionData?.TryGetValue(JsonSchemaExtensions.PropertyNamesSchema, out var value) is true &&
@@ -29,7 +29,7 @@ namespace Bonsai.Sgen
             {
                 var valueType = ResolveDictionaryValueType(schema, "object");
                 var keyType = Resolve(propertyNamesSchema, propertyNamesSchema.ActualSchema.IsNullable(Settings.SchemaType), string.Empty);
-                return string.Format(Settings.DictionaryType + "<{0}, {1}>", keyType, valueType);
+                return $"{Settings.DictionaryType}<{keyType}, {valueType}>";
             }
 
             return typeName;

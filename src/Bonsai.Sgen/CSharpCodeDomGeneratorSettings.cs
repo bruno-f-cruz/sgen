@@ -19,7 +19,16 @@ namespace Bonsai.Sgen
             DictionaryInstanceType = "System.Collections.Generic.Dictionary";
             DictionaryBaseType = "System.Collections.Generic.Dictionary";
             DictionaryType = "System.Collections.Generic.Dictionary";
+            SetInstanceType = "System.Collections.Generic.HashSet";
+            SetBaseType = "System.Collections.Generic.HashSet";
+            SetType = "System.Collections.Generic.HashSet";
         }
+
+        public string SetInstanceType { get; set; }
+
+        public string SetBaseType { get; set; }
+
+        public string SetType { get; set; }
 
         public SerializerLibraries SerializerLibraries { get; set; }
     }
