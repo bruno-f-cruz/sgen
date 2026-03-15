@@ -119,6 +119,86 @@ namespace Bonsai.Sgen.Tests
         }
 
         [TestMethod]
+        public async Task GenerateFromUniqueItemsArrayProperty_EnsureHashSetType()
+        {
+            var schema = await JsonSchema.FromJsonAsync(@"
+{
+    ""$schema"": ""http://json-schema.org/draft-04/schema#"",
+    ""type"": ""object"",
+    ""title"": ""Container"",
+    ""properties"": {
+      ""tags"": {
+        ""type"": ""array"",
+        ""items"": { ""type"": ""string"" },
+        ""uniqueItems"": true
+      }
+    }
+}
+");
+            var generator = TestHelper.CreateGenerator(schema);
+            var code = generator.GenerateFile();
+            Assert.IsTrue(code.Contains("System.Collections.Generic.HashSet<string>"), "Expected HashSet<string> for uniqueItems array.");
+            Assert.IsTrue(code.Contains("_tags = new System.Collections.Generic.HashSet<string>();"), "Missing HashSet initializer.");
+            CompilerTestHelper.CompileFromSource(code);
+        }
+
+        [TestMethod]
+        public async Task GenerateFromArrayProperty_WithoutUniqueItems_EnsureListType()
+        {
+            var schema = await JsonSchema.FromJsonAsync(@"
+{
+    ""$schema"": ""http://json-schema.org/draft-04/schema#"",
+    ""type"": ""object"",
+    ""title"": ""Container"",
+    ""properties"": {
+      ""items"": {
+        ""type"": ""array"",
+        ""items"": { ""type"": ""string"" },
+        ""uniqueItems"": false
+      }
+    }
+}
+");
+            var generator = TestHelper.CreateGenerator(schema);
+            var code = generator.GenerateFile();
+            Assert.IsTrue(code.Contains("System.Collections.Generic.List<string>"), "Expected List<string> when uniqueItems is false.");
+            Assert.IsFalse(code.Contains("HashSet"), "Should not generate HashSet when uniqueItems is false.");
+            CompilerTestHelper.CompileFromSource(code);
+        }
+
+        [TestMethod]
+        public async Task GenerateFromUniqueItemsArrayOfObjects_EnsureHashSetType()
+        {
+            var schema = await JsonSchema.FromJsonAsync(@"
+{
+    ""$schema"": ""http://json-schema.org/draft-04/schema#"",
+    ""type"": ""object"",
+    ""title"": ""Container"",
+    ""definitions"": {
+      ""Tag"": {
+        ""type"": ""object"",
+        ""title"": ""Tag"",
+        ""properties"": {
+          ""name"": { ""type"": ""string"" }
+        }
+      }
+    },
+    ""properties"": {
+      ""tags"": {
+        ""type"": ""array"",
+        ""items"": { ""$ref"": ""#/definitions/Tag"" },
+        ""uniqueItems"": true
+      }
+    }
+}
+");
+            var generator = TestHelper.CreateGenerator(schema);
+            var code = generator.GenerateFile();
+            Assert.IsTrue(code.Contains("System.Collections.Generic.HashSet<Tag>"), "Expected HashSet<Tag> for uniqueItems array of objects.");
+            CompilerTestHelper.CompileFromSource(code);
+        }
+
+        [TestMethod]
         public async Task GenerateFromComplexPropertyDefault_EnsureFieldInitializer()
         {
             var schema = await JsonSchema.FromJsonAsync(@"
