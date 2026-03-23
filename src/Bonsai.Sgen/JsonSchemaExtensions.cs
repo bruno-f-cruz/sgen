@@ -98,6 +98,10 @@ namespace Bonsai.Sgen
                             discriminatorSchema = new JsonSchema();
                             discriminatorSchema.DiscriminatorObject = actualSchema.DiscriminatorObject;
                             discriminatorSchema.IsAbstract = actualSchema.IsAbstract;
+                            if (actualSchema.ExtensionData?.Count > 0)
+                            {
+                                discriminatorSchema.ExtensionData = new Dictionary<string, object>(actualSchema.ExtensionData);
+                            }
                             RootObject.Definitions.Add(typeNameHint, discriminatorSchema);
                             ResolveOneOfInheritance(actualSchema, discriminatorSchema);
                         }
