@@ -158,83 +158,34 @@ schema => new TestJsonReferenceResolver(
             CompilerTestHelper.CompileFromSource(codeB);
         }
 
-          [TestMethod]
-          public async Task GenerateWithExternalDiscriminatorReferenceProperty_OmitExternalDiscriminatorDefinition()
-          {
-              var schema = await JsonSchema.FromJsonAsync("""
-  {
-    "$defs": {
-      "Dog": {
-        "type": "object",
-        "title": "Dog",
-        "x-sgen-typename": "TestHelper.Base.Dog",
-        "properties": {
-          "kind": {
-            "const": "Dog",
-            "type": "string"
-          }
-        }
-      },
-      "Cat": {
-        "type": "object",
-        "title": "Cat",
-        "x-sgen-typename": "TestHelper.Base.Cat",
-        "properties": {
-          "kind": {
-            "const": "Cat",
-            "type": "string"
-          }
-        }
-      },
-      "Animal": {
-        "title": "Animal",
-        "x-sgen-typename": "TestHelper.Base.Animal",
-        "discriminator": {
-          "propertyName": "kind",
-          "mapping": {
-            "Dog": "#/$defs/Dog",
-            "Cat": "#/$defs/Cat"
-          }
-        },
-        "oneOf": [
-          { "$ref": "#/$defs/Dog" },
-          { "$ref": "#/$defs/Cat" }
-        ]
-      },
-      "Container": {
-        "type": "object",
-        "title": "Container",
-        "properties": {
-          "Animal": {
-            "$ref": "#/$defs/Animal"
-          }
-        }
-      }
-    }
-  }
-  """);
+        [TestMethod]
+        public void GenerateWithExternalDiscriminatorReferenceProperty_OmitExternalDiscriminatorDefinition()
+        {
+            var derivedSchemas = SchemaTestHelper.CreateDerivedSchemas("kind", "Dog", "Cat");
+            var discriminator = SchemaTestHelper.CreateDiscriminatorSchema("kind", derivedSchemas);
+            var definitions = derivedSchemas.Prepend(new("Animal", discriminator));
+            var schema = SchemaTestHelper.CreateContainerSchema(definitions);
+            schema.Properties.Add("Animal", new JsonSchemaProperty { Reference = discriminator });
+            foreach (var definition in definitions)
+            {
+                definition.Value.ExtensionData ??= new Dictionary<string, object>();
+                definition.Value.ExtensionData[JsonSchemaExtensions.TypeNameAnnotation] = $"TestHelper.Base.{definition.Key}";
+            }
+
             var generator = TestHelper.CreateGenerator(schema, schemaNamespace: nameof(TestHelper) + ".Derived");
             var code = generator.GenerateFile();
             Assert.IsTrue(code.Contains("public TestHelper.Base.Animal Animal"), "Container must reference external type.");
             Assert.IsTrue(!code.Contains("public partial class Animal"), "External discriminator base type should not be generated.");
 
             const string externalCode = @"
-      namespace TestHelper.Base
-      {
-        public class Animal
-        {
-        }
-
-        public class Dog : Animal
-        {
-        }
-
-        public class Cat : Animal
-        {
-        }
-      }
-      ";
+            namespace TestHelper.Base
+            {
+                public class Animal { }
+                public class Dog : Animal { }
+                public class Cat : Animal { }
+            }
+            ";
             CompilerTestHelper.CompileFromSource(externalCode, code);
-          }
+        }
     }
 }
