@@ -162,11 +162,12 @@ schema => new TestJsonReferenceResolver(
         public void GenerateWithExternalDiscriminatorReferenceProperty_OmitExternalDiscriminatorDefinition()
         {
             var derivedSchemas = SchemaTestHelper.CreateDerivedSchemas("kind", "Dog", "Cat");
-            var discriminator = SchemaTestHelper.CreateDiscriminatorSchema("kind", derivedSchemas);
-            var definitions = derivedSchemas.Prepend(new("Animal", discriminator));
-            var schema = SchemaTestHelper.CreateContainerSchema(definitions);
-            schema.Properties.Add("Animal", new JsonSchemaProperty { Reference = discriminator });
-            foreach (var definition in definitions)
+            var discriminator = SchemaTestHelper.CreateDiscriminatorSchema<JsonSchemaProperty>("kind", derivedSchemas);
+            var schema = SchemaTestHelper.CreateContainerSchema(derivedSchemas);
+            schema.Properties.Add("Animal", discriminator);
+
+            var schemaProperty = schema.Properties.First();
+            foreach (var definition in derivedSchemas.Prepend(new(schemaProperty.Key, schemaProperty.Value)))
             {
                 definition.Value.ExtensionData ??= new Dictionary<string, object>();
                 definition.Value.ExtensionData[JsonSchemaExtensions.TypeNameAnnotation] = $"TestHelper.Base.{definition.Key}";
