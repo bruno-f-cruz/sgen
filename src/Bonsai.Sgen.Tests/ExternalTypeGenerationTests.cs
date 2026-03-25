@@ -157,5 +157,36 @@ schema => new TestJsonReferenceResolver(
             Assert.IsTrue(codeB.Contains("public partial class CommonType"), "Missing internal type definition.");
             CompilerTestHelper.CompileFromSource(codeB);
         }
+
+        [TestMethod]
+        public void GenerateWithExternalDiscriminatorReferenceProperty_OmitExternalDiscriminatorDefinition()
+        {
+            var derivedSchemas = SchemaTestHelper.CreateDerivedSchemas("kind", "Dog", "Cat");
+            var discriminator = SchemaTestHelper.CreateDiscriminatorSchema<JsonSchemaProperty>("kind", derivedSchemas);
+            var schema = SchemaTestHelper.CreateContainerSchema(derivedSchemas);
+            schema.Properties.Add("Animal", discriminator);
+
+            var schemaProperty = schema.Properties.First();
+            foreach (var definition in derivedSchemas.Prepend(new(schemaProperty.Key, schemaProperty.Value)))
+            {
+                definition.Value.ExtensionData ??= new Dictionary<string, object>();
+                definition.Value.ExtensionData[JsonSchemaExtensions.TypeNameAnnotation] = $"TestHelper.Base.{definition.Key}";
+            }
+
+            var generator = TestHelper.CreateGenerator(schema, schemaNamespace: nameof(TestHelper) + ".Derived");
+            var code = generator.GenerateFile();
+            Assert.IsTrue(code.Contains("public TestHelper.Base.Animal Animal"), "Container must reference external type.");
+            Assert.IsTrue(!code.Contains("public partial class Animal"), "External discriminator base type should not be generated.");
+
+            const string externalCode = @"
+            namespace TestHelper.Base
+            {
+                public class Animal { }
+                public class Dog : Animal { }
+                public class Cat : Animal { }
+            }
+            ";
+            CompilerTestHelper.CompileFromSource(externalCode, code);
+        }
     }
 }
